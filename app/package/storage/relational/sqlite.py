@@ -1,8 +1,8 @@
-import duckdb
+import aiosqlite
 from typing import Dict, List, Any
 from ..base import RelationalStorage
 
-class DuckDBStorage(RelationalStorage):
+class SQLiteStorage(RelationalStorage):
     def __init__(self, config: Dict):
         self.db_path = config["path"]
     
@@ -11,33 +11,32 @@ class DuckDBStorage(RelationalStorage):
         columns = ", ".join([f'"{col}" {dtype}' for col, dtype in schema.items()])
         sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns})"
         
-        with duckdb.connect(self.db_path) as conn:
-            conn.execute(sql)
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute(sql)
+            await db.commit()
     
     async def insert(self, table: str, data: Dict) -> Any:
         columns = ", ".join([f'"{col}"' for col in data.keys()])
         placeholders = ", ".join(["?" for _ in data])
         sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
         
-        with duckdb.connect(self.db_path) as conn:
-            cursor = conn.execute(sql, list(data.values()))
-            return cursor.fetchone()
+        async with aiosqlite.connect(self.db_path) as db:
+            cursor = await db.execute(sql, list(data.values()))
+            await db.commit()
+            return cursor.lastrowid
     
     async def query(self, sql: str, params: Dict = None) -> List[Dict]:
-        with duckdb.connect(self.db_path) as conn:
-            if params:
-                cursor = conn.execute(sql, list(params.values()))
-            else:
-                cursor = conn.execute(sql)
-            
-            columns = [desc[0] for desc in cursor.description]
-            rows = cursor.fetchall()
-            return [dict(zip(columns, row)) for row in rows]
+        async with aiosqlite.connect(self.db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute(sql, list(params.values()) if params else [])
+            rows = await cursor.fetchall()
+            return [dict(row) for row in rows]
     
     async def update(self, table: str, data: Dict, where: Dict) -> None:
         set_clause = ", ".join([f'"{col}" = ?' for col in data.keys()])
         where_clause = " AND ".join([f'"{col}" = ?' for col in where.keys()])
         sql = f"UPDATE {table} SET {set_clause} WHERE {where_clause}"
         
-        with duckdb.connect(self.db_path) as conn:
-            conn.execute(sql, list(data.values()) + list(where.values()))
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute(sql, list(data.values()) + list(where.values()))
+            await db.commit()

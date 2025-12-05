@@ -1,0 +1,18 @@
+relational:
+  user_data_sqlite:
+    type: "sqlite"
+    config:
+      path: "data/users.db"
+  
+  user_data_duckdb:
+    type: "duckdb"
+    config:
+      path: "data/users.duckdb"
+
+nosql:
+  user_data_dynamodb:
+    type: "dynamodb"
+    config:
+      region: "us-east-1"
+      access_key: "<your_access_key>"
+      secret_key: "<your_secret_key>"

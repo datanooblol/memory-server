@@ -3,44 +3,70 @@
 ## Overview
 Framework for agentic memory system that allows users to upload files and perform SQL operations with learning capabilities.
 
-## Storage Architecture
+## Implemented Storage Architecture
 
-### Relational Database
-- **user**: User information (id, password)
-- **project**: User projects
+### Relational Database (IMPLEMENTED)
+- **user**: User information (id, email, password) with Bangkok timezone
+- **project**: User projects with descriptions
 - **chat_session**: Multiple sessions per project
-- **source**: Uploaded files per project
-- **conversation**: Chat history within sessions
-- **agent_tasks**: Agent execution tracking for debugging
-- **reference**: Store generated artifacts (SQL queries, Plotly visualizations, results)
+- **source**: Uploaded files with metadata and path information
+- **conversation**: Chat history with role-based messages and references
+- **agent_execution**: Agent task tracking with execution steps (replaces agent_tasks)
+- **episode**: Compressed conversation memory with hierarchical rollups
+- **metadata**: Table-level metadata for semantic search
+- **field_metadata**: Field-level metadata with sample values for enhanced search
 
-### Vector Database
-- **source_metadata**: File metadata, schema info, field descriptions
-- **episode**: Compressed conversation memory (user + assistant turns)
+### Vector Database (PLANNED)
+- **source_metadata**: File metadata embeddings for semantic search
+- **episode**: Compressed conversation embeddings
 - **query_patterns**: Semantic patterns of successful queries for learning
 
-## Query Pattern Learning
+## Current Implementation Status
 
-### Pattern Extraction Process
-1. User uploads file → stored in `source` + metadata in vector
-2. User asks question → generates SQL
-3. SQL executes successfully → stored in `reference`
-4. Extract semantic pattern from SQL + user question
-5. Store pattern embedding in vector for future similarity matching
+### ✅ Completed
+- **Multi-backend Storage**: SQLite, DuckDB, DynamoDB support
+- **Repository Pattern**: Generic CRUD operations with automatic backend detection
+- **Data Models**: 10 Pydantic models with validation and Bangkok timezone
+- **Schema Management**: Cross-compatible SQL schemas with JSON serialization
+- **Complex Data Types**: Automatic JSON serialization for lists, dicts, booleans
+- **Reserved Keyword Handling**: Proper SQL escaping for column names
+- **Configuration-Driven**: YAML-based storage backend selection
 
-### Pattern Generation Methods
-- **SQL Parser**: Extract structure (aggregation, grouping, filters)
-- **LLM Abstraction**: Convert to semantic description
-- **Example**: `SELECT region, SUM(revenue) WHERE date...` → `"aggregate numerical by categorical with temporal filter"`
+### 🚧 In Progress
+- Vector storage implementation
+- Semantic search capabilities
+- Query pattern learning
 
-## Future Capabilities
+### 📋 Planned
+- File upload and processing
+- SQL generation from natural language
+- Visualization generation
 - Database connections
-- Multi-modal visualizations
-- Schema inference and learning
-- Query optimization through pattern matching
+- Multi-step semantic filtering
 
-## Workflow
-1. Upload → Schema detection → Metadata storage
-2. Query → Pattern matching → SQL generation → Execution
-3. Success → Pattern learning → Reference storage
-4. Failure → Debug tracking in agent_tasks
+## Data Model Relationships
+```
+User (1) → (N) Project
+Project (1) → (N) ChatSession
+Project (1) → (N) Source
+ChatSession (1) → (N) Conversation
+Conversation (1) → (N) AgentExecution
+ChatSession (1) → (N) Episode
+Source (1) → (1) Metadata
+Metadata (1) → (N) FieldMetadata
+```
+
+## Storage Backend Flexibility
+- **SQLite**: Development and testing
+- **DuckDB**: Analytics and large datasets
+- **DynamoDB**: Cloud-native NoSQL
+- **Future**: PostgreSQL, MongoDB, etc.
+
+## Workflow (Current)
+1. User creates account → User table
+2. User creates project → Project table
+3. User starts chat → ChatSession table
+4. User/Assistant exchange → Conversation table
+5. Agent processes → AgentExecution table
+6. Conversations compress → Episode table
+7. Files upload → Source + Metadata + FieldMetadata tables

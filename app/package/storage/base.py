@@ -31,3 +31,20 @@ class VectorStorage(ABC):
     @abstractmethod
     async def search_similar(self, collection: str, vector: List[float], limit: int = 10) -> List[Dict]:
         pass
+
+class NoSQLStorage(ABC):
+    @abstractmethod
+    async def create_table(self, table_name: str, key_schema: Dict) -> None:
+        pass
+    
+    @abstractmethod
+    async def put_item(self, table: str, item: Dict) -> None:
+        pass
+    
+    @abstractmethod
+    async def get_item(self, table: str, key: Dict) -> Optional[Dict]:
+        pass
+    
+    @abstractmethod
+    async def scan_items(self, table: str, filters: Dict = None) -> List[Dict]:
+        pass
