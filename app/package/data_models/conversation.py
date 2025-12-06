@@ -5,8 +5,8 @@ from typing import Optional, List
 from .base import BaseTimestampModel
 
 class Role(StrEnum):
-    user = "user"
-    assistant = "assistant"
+    USER = "user"
+    ASSISTANT = "assistant"
 
 class Conversation(BaseTimestampModel):
     convo_id: str = Field(default_factory=lambda: str(uuid4()), description="Primary key - unique conversation identifier")

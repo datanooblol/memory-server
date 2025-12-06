@@ -5,7 +5,7 @@ from typing import Dict, Any
 from .base import BaseTimestampModel
 
 class SourceType(StrEnum):
-    csv = "csv"
+    CSV = "csv"
 
 class Source(BaseTimestampModel):
     source_id: str = Field(default_factory=lambda: str(uuid4()), description="Primary key - unique source identifier")
