@@ -42,6 +42,8 @@ SOURCE = {
     "source_name": "TEXT NOT NULL",
     "size": "INTEGER NOT NULL",
     "source_type": "TEXT NOT NULL",
+    "status": "TEXT NOT NULL", 
+    "is_selected": "TEXT NOT NULL",
     "source_path": "TEXT NOT NULL",  # JSON string for dict
     "created_at": "TEXT NOT NULL",
     "updated_at": "TEXT NOT NULL"

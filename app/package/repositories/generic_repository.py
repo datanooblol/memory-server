@@ -88,7 +88,7 @@ class GenericRepository(Generic[T]):
         return [self.model_class(**self._deserialize_from_storage(row)) for row in results]
     
     async def update(self, id: str, model: T) -> None:
-        data = model.dict()
+        data = model.model_dump()
         serialized_data = self._serialize_for_storage(data)
         
         # Remove fields that shouldn't be updated
@@ -99,6 +99,25 @@ class GenericRepository(Generic[T]):
         # serialized_data['updated_at'] = datetime.now().isoformat()
         
         await self.storage.update(self.table_name, serialized_data, {self.id_field: id})
+
+    async def patch(self, id: str, partial_data: Dict[str, Any]) -> None:
+        # Get existing record
+        existing = await self.get_by_id(id)
+        if not existing:
+            raise ValueError("Record not found")
+        
+        # Merge partial data with existing
+        existing_dict = existing.model_dump()
+        existing_dict.update(partial_data)
+
+        data = self.model_class(**existing_dict).model_dump()
+        serialized_data = self._serialize_for_storage(data)
+
+        serialized_data.pop(self.id_field, None)
+        serialized_data.pop('created_at', None)
+        
+        await self.storage.update(self.table_name, serialized_data, {self.id_field: id})
+
     
     async def delete(self, id: str) -> None:
         await self.storage.query(
