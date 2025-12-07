@@ -4,6 +4,7 @@ from .chat_session import ChatSession
 from .source import Source, SourceType
 from .conversation import Conversation, Role
 from .reference import Reference, ReferenceType
+from .agent_execution import AgentExecution
 
 __all__ = [
     "User",
@@ -11,5 +12,6 @@ __all__ = [
     "ChatSession",
     "Source", "SourceType",
     "Conversation", "Role",
-    "Reference", "ReferenceType"
+    "Reference", "ReferenceType",
+    "AgentExecution",
 ]

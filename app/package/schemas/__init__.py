@@ -47,6 +47,15 @@ SOURCE = {
     "updated_at": "TEXT NOT NULL"
 }
 
+REFERENCE = {
+    "reference_id": "TEXT PRIMARY KEY",
+    "convo_id": "TEXT NOT NULL",
+    "type": "TEXT NOT NULL",
+    "content": "TEXT NOT NULL",
+    "created_at": "TEXT NOT NULL",
+    "updated_at": "TEXT NOT NULL"
+}
+
 AGENT_EXECUTION = {
     "execution_id": "TEXT PRIMARY KEY",
     "convo_id": "TEXT NOT NULL",

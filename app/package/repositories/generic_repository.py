@@ -62,7 +62,7 @@ class GenericRepository(Generic[T]):
     
     async def get_by_id(self, id: str) -> Optional[T]:
         results = await self.storage.query(
-            f'SELECT * FROM {self.table_name} WHERE "{self.id_field}" = ?',
+            f'SELECT * FROM "{self.table_name}" WHERE "{self.id_field}" = ?',
             {self.id_field: id}
         )
         if results:
@@ -81,7 +81,7 @@ class GenericRepository(Generic[T]):
         where_clause = " AND ".join(where_parts) if where_parts else "1=1"
         
         results = await self.storage.query(
-            f"SELECT * FROM {self.table_name} WHERE {where_clause}",
+            f'SELECT * FROM "{self.table_name}" WHERE {where_clause}',
             params
         )
         
@@ -91,13 +91,33 @@ class GenericRepository(Generic[T]):
         data = model.dict()
         serialized_data = self._serialize_for_storage(data)
         
-        # Remove the ID from data to avoid updating it
+        # Remove fields that shouldn't be updated
         serialized_data.pop(self.id_field, None)
+        serialized_data.pop('created_at', None)
+        
+        # Always update updated_at to current time, use updated_at from data models instead
+        # serialized_data['updated_at'] = datetime.now().isoformat()
         
         await self.storage.update(self.table_name, serialized_data, {self.id_field: id})
     
     async def delete(self, id: str) -> None:
         await self.storage.query(
-            f'DELETE FROM {self.table_name} WHERE "{self.id_field}" = ?',
+            f'DELETE FROM "{self.table_name}" WHERE "{self.id_field}" = ?',
             {self.id_field: id}
         )
+    
+    async def get_last_n(self, n: int, order_by: str = "created_at") -> List[T]:
+        """Get last n records ordered by timestamp (newest first)"""
+        results = await self.storage.query(
+            f'SELECT * FROM "{self.table_name}" ORDER BY "{order_by}" DESC LIMIT ?',
+            {"limit": n}
+        )
+        return [self.model_class(**self._deserialize_from_storage(row)) for row in results]
+    
+    async def get_first_n(self, n: int, order_by: str = "created_at") -> List[T]:
+        """Get first n records ordered by timestamp (oldest first)"""
+        results = await self.storage.query(
+            f'SELECT * FROM "{self.table_name}" ORDER BY "{order_by}" ASC LIMIT ?',
+            {"limit": n}
+        )
+        return [self.model_class(**self._deserialize_from_storage(row)) for row in results]
