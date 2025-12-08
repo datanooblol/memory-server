@@ -61,7 +61,26 @@ REFERENCE = {
 AGENT_EXECUTION = {
     "execution_id": "TEXT PRIMARY KEY",
     "convo_id": "TEXT NOT NULL",
-    "tasks": "TEXT NOT NULL",  # JSON string for list
+    "status": "TEXT NOT NULL",
+    "total_tasks": "INTEGER NOT NULL DEFAULT 0",
+    "created_at": "TEXT NOT NULL",
+    "updated_at": "TEXT NOT NULL"
+}
+
+# Add new TASK schema
+TASK = {
+    "task_id": "TEXT PRIMARY KEY",
+    "execution_id": "TEXT NOT NULL",
+    "task_name": "TEXT NOT NULL",
+    "status": "TEXT NOT NULL",
+    "sequence_order": "INTEGER NOT NULL",
+    "input_data": "TEXT NOT NULL",  # JSON string
+    "output_data": "TEXT",  # JSON string, nullable
+    "error_message": "TEXT",  # nullable
+    "model_id": "TEXT",  # nullable
+    "input_tokens": "INTEGER",  # nullable
+    "output_tokens": "INTEGER",  # nullable
+    "cost": "REAL",  # nullable, for decimal values
     "created_at": "TEXT NOT NULL",
     "updated_at": "TEXT NOT NULL"
 }
@@ -107,7 +126,9 @@ TABLE_SCHEMAS = {
     "chat_sessions": CHAT_SESSION,
     "conversations": CONVERSATION,
     "sources": SOURCE,
+    "references": REFERENCE,  # Add this if missing
     "agent_executions": AGENT_EXECUTION,
+    "tasks": TASK,  # Add new table
     "episodes": EPISODE,
     "metadata": METADATA,
     "field_metadata": FIELD_METADATA

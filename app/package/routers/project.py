@@ -39,7 +39,7 @@ async def get_project(
     user_id: str = Depends(verify_token),
     project_repo = Depends(get_project_repo)
 ):
-    project = await project_repo.get_by_id(dict(project_id=project_id))
+    project = await project_repo.get_by_id(project_id)
     return {"projects": project}
 
 @router.put("/{project_id}")

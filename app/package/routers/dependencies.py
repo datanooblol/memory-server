@@ -43,3 +43,9 @@ async def get_agent_execution_repo():
     await storage.create_table("agent_executions", schemas.AGENT_EXECUTION)
     factory = RepositoryFactory(storage)
     return factory.get_agent_execution_repository()
+
+async def get_task_repo():
+    storage = StorageFactory.create_relational("duckdb", dict(path="./data/memory.db"))
+    await storage.create_table("tasks", schemas.TASK)
+    factory = RepositoryFactory(storage)
+    return factory.get_task_repository()

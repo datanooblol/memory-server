@@ -5,6 +5,7 @@ from ..data_models.conversation import Conversation
 from ..data_models.reference import Reference
 from ..data_models.source import Source
 from ..data_models.agent_execution import AgentExecution
+from ..data_models.task import Task
 from ..data_models.episode import Episode
 from ..data_models.metadata import Metadata, FieldMetadata
 from .generic_repository import GenericRepository
@@ -41,6 +42,9 @@ class RepositoryFactory:
     def get_agent_execution_repository(self):
         return self._get_repository(AgentExecution, "agent_executions", "execution_id")
     
+    def get_task_repository(self):
+        return self._get_repository(Task, "tasks", "task_id")
+
     def get_episode_repository(self):
         return self._get_repository(Episode, "episodes", "episode_id")
     

@@ -6,6 +6,8 @@ from package.routers.source import router as source_router
 from package.routers.chat_session import router as chat_session_router
 from package.routers.conversation import router as conversation_router
 from package.routers.reference import router as reference_router
+from package.routers.agent_execution import router as agent_execution_router
+from package.routers.task import router as task_router
 
 app = FastAPI(title="Memory Service")
 
@@ -24,7 +26,9 @@ for r in [
     source_router,
     chat_session_router,
     conversation_router,
-    reference_router
+    reference_router,
+    agent_execution_router,
+    task_router,
 ]:
     app.include_router(r)
 
