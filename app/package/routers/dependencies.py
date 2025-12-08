@@ -32,6 +32,12 @@ async def get_conversation_repo():
     factory = RepositoryFactory(storage)
     return factory.get_conversation_repository()
 
+async def get_reference_repo():
+    storage = StorageFactory.create_relational("duckdb", dict(path="./data/memory.db"))
+    await storage.create_table("references", schemas.REFERENCE)
+    factory = RepositoryFactory(storage)
+    return factory.get_reference_repository()
+
 async def get_agent_execution_repo():
     storage = StorageFactory.create_relational("duckdb", dict(path="./data/memory.db"))
     await storage.create_table("agent_executions", schemas.AGENT_EXECUTION)

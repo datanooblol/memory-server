@@ -70,7 +70,7 @@ class GenericRepository(Generic[T]):
             return self.model_class(**deserialized_data)
         return None
     
-    async def find_by(self, filters: Dict[str, Any]) -> List[T]:
+    async def find_by(self, filters: Dict[str, Any], order_by: str = "created_at") -> List[T]:
         where_parts = []
         params = {}
         
@@ -81,7 +81,7 @@ class GenericRepository(Generic[T]):
         where_clause = " AND ".join(where_parts) if where_parts else "1=1"
         
         results = await self.storage.query(
-            f'SELECT * FROM "{self.table_name}" WHERE {where_clause}',
+            f'SELECT * FROM "{self.table_name}" WHERE {where_clause} ORDER BY "{order_by}" ASC',
             params
         )
         
