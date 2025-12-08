@@ -49,3 +49,15 @@ async def get_task_repo():
     await storage.create_table("tasks", schemas.TASK)
     factory = RepositoryFactory(storage)
     return factory.get_task_repository()
+
+async def get_metadata_repo():
+    storage = StorageFactory.create_relational("duckdb", dict(path="./data/memory.db"))
+    await storage.create_table("metadata", schemas.METADATA)
+    factory = RepositoryFactory(storage)
+    return factory.get_metadata_repository()
+
+async def get_field_metadata_repo():
+    storage = StorageFactory.create_relational("duckdb", dict(path="./data/memory.db"))
+    await storage.create_table("field_metadata", schemas.FIELD_METADATA)
+    factory = RepositoryFactory(storage)
+    return factory.get_field_metadata_repository()

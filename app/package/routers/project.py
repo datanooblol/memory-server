@@ -10,7 +10,10 @@ class ProjectRequest(BaseModel):
     project_name:str
     project_description:str
 
-@router.post("/")
+class ProjectResponse(BaseModel):
+    project_id:str
+
+@router.post("/", response_model=ProjectResponse)
 async def create_project(
     project_data: ProjectRequest,
     user_id: str = Depends(verify_token),
@@ -23,24 +26,24 @@ async def create_project(
     )
     
     project_id = await project_repo.create(new_project)
-    return {"message": "Project created", "project_id": project_id}
+    return ProjectResponse(project_id=project_id)
 
-@router.get("/")
-async def get_project(
+@router.get("/", response_model=list[Project])
+async def get_all_projects(
     user_id: str = Depends(verify_token),
     project_repo = Depends(get_project_repo)
 ):
     projects = await project_repo.find_by(dict(user_id=user_id))
-    return {"projects": projects}
+    return projects
 
-@router.get("/{project_id}")
+@router.get("/{project_id}", response_model=Project)
 async def get_project(
     project_id:str,
     user_id: str = Depends(verify_token),
     project_repo = Depends(get_project_repo)
 ):
     project = await project_repo.get_by_id(project_id)
-    return {"projects": project}
+    return project
 
 @router.put("/{project_id}")
 async def update_project(

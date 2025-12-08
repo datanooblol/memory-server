@@ -10,8 +10,11 @@ class ChatSessionRequest(BaseModel):
     chat_session_id:str
     session_name:str
 
-@router.post("/project/{project_id}")
-async def create_chat_session(
+class ChatSessionResponse(BaseModel):
+    chat_session_id:str
+
+@router.post("/project/{project_id}", response_model=ChatSessionResponse)
+async def create_chat_session_by_project(
     project_id: str,
     chat_session_data: ChatSessionRequest,
     user_id: str = Depends(verify_token),
@@ -29,18 +32,18 @@ async def create_chat_session(
         session_name=chat_session_data.session_name,
     )
     chat_session_id = await chat_session_repo.create(new_chat_session)
-    return {"message": "Chat session created", "chat_session_id": chat_session_id}
+    return ChatSessionResponse(chat_session_id=chat_session_id)
 
-@router.get("/project/{project_id}")
+@router.get("/project/{project_id}", response_model=list[ChatSession])
 async def get_chat_sessions_by_project(
     project_id: str,
     user_id: str = Depends(verify_token),
     chat_session_repo = Depends(get_chat_session_repo)
 ):
     chat_sessions = await chat_session_repo.find_by(dict(project_id=project_id))
-    return {"chat_sessions": chat_sessions}
+    return chat_sessions
 
-@router.get("/{chat_session_id}")
+@router.get("/{chat_session_id}", response_model=ChatSession)
 async def get_chat_session(
     chat_session_id: str,
     user_id: str = Depends(verify_token),
@@ -49,7 +52,7 @@ async def get_chat_session(
     chat_session = await chat_session_repo.get_by_id(chat_session_id)
     if not chat_session:
         raise HTTPException(status_code=404, detail="Chat session not found")
-    return {"chat_session": chat_session}
+    return chat_session
 
 @router.patch("/session-name/{chat_session_id}")
 async def update_chat_session_name(

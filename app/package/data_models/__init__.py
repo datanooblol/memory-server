@@ -6,6 +6,7 @@ from .conversation import Conversation, Role, ReferenceData
 from .reference import Reference, ReferenceType
 from .agent_execution import AgentExecution, ExecutionStatus
 from .task import Task, TaskStatus, TaskName
+from .metadata import Metadata, FieldMetadata
 
 __all__ = [
     "User",
@@ -15,5 +16,6 @@ __all__ = [
     "Conversation", "Role", "ReferenceData",
     "Reference", "ReferenceType",
     "AgentExecution", "ExecutionStatus",
-    "Task", "TaskStatus", "TaskName"
+    "Task", "TaskStatus", "TaskName",
+    "Metadata", "FieldMetadata",
 ]

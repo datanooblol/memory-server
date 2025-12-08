@@ -10,7 +10,11 @@ class ReferenceRequest(BaseModel):
     type:ReferenceType
     content:str
 
-@router.post("/conversation/{convo_id}")
+class ReferenceResponse(BaseModel):
+    reference_id:str
+    type:ReferenceType
+
+@router.post("/conversation/{convo_id}", response_model=ReferenceResponse)
 async def create_reference(
     convo_id:str,
     reference_data:ReferenceRequest,
@@ -27,9 +31,9 @@ async def create_reference(
         content=reference_data.content
     )
     reference_id = await reference_repo.create(new_reference)
-    return {"message": f"{reference_data.type.upper()} reference created", "reference_id": reference_id}
+    return ReferenceResponse(reference_id=reference_id, type=reference_data.type)
 
-@router.get("/{reference_id}")
+@router.get("/{reference_id}", response_model=Reference)
 async def get_reference(
     reference_id:str,
     user_id:str = Depends(verify_token),
@@ -38,7 +42,7 @@ async def get_reference(
     reference = await reference_repo.get_by_id(reference_id)
     if not reference:
         raise HTTPException(status_code=404, detail="Reference not found")
-    return {"reference": reference}
+    return reference
 
 @router.put("/{reference_id}")
 async def update_reference(
@@ -67,29 +71,29 @@ async def delete_reference(
     await reference_repo.delete(reference_id)
     return {"message": "Reference deleted"}
 
-@router.get("/conversation/{convo_id}")
+@router.get("/conversation/{convo_id}", response_model=list[Reference])
 async def get_references_by_conversation(
     convo_id:str,
     user_id:str = Depends(verify_token),
     reference_repo = Depends(get_reference_repo)
 ):
     references = await reference_repo.find_by(dict(convo_id=convo_id))
-    return {"references": references}
+    return references
 
-@router.patch("/conversation/{convo_id}")
-async def update_references_by_conversation(
-    convo_id:str,
-    user_id:str = Depends(verify_token),
-    conversation_repo = Depends(get_conversation_repo),
-    reference_repo = Depends(get_reference_repo)
-):
-    convo = await conversation_repo.get_by_id(convo_id)
-    if not convo:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    references = await reference_repo.find_by(dict(convo_id=convo_id))
-    if not references:
-        raise HTTPException(status_code=404, detail="References not found")
-    new_references = [ReferenceData(reference_id=r.reference_id, type=r.type) for r in references]
-    # convo.references = new_references
-    await conversation_repo.patch(convo_id, dict(references=new_references))
-    return {"message": "Conversation's references updated"}
+# @router.patch("/conversation/{convo_id}")
+# async def update_references_by_conversation(
+#     convo_id:str,
+#     user_id:str = Depends(verify_token),
+#     conversation_repo = Depends(get_conversation_repo),
+#     reference_repo = Depends(get_reference_repo)
+# ):
+#     convo = await conversation_repo.get_by_id(convo_id)
+#     if not convo:
+#         raise HTTPException(status_code=404, detail="Conversation not found")
+#     references = await reference_repo.find_by(dict(convo_id=convo_id))
+#     if not references:
+#         raise HTTPException(status_code=404, detail="References not found")
+#     new_references = [ReferenceData(reference_id=r.reference_id, type=r.type) for r in references]
+#     # convo.references = new_references
+#     await conversation_repo.patch(convo_id, dict(references=new_references))
+#     return {"message": "Conversation's references updated"}

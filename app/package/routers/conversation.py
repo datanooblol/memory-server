@@ -10,17 +10,21 @@ class ConversationRequest(BaseModel):
     content:str
     role:Role
 
-@router.get("/chat-session/{chat_session_id}")
-async def get_conversations(
+class ConversationResponse(BaseModel):
+    convo_id:str
+    role:Role
+
+@router.get("/chat-session/{chat_session_id}", response_model=list[Conversation])
+async def get_conversations_by_chat_session(
     chat_session_id:str,
     user_id:str = Depends(verify_token),
     conversation_repo = Depends(get_conversation_repo)
 ):
     convos = await conversation_repo.find_by(dict(chat_session_id=chat_session_id))
-    return {"conversations": convos}
+    return convos
 
-@router.post("/chat-session/{chat_session_id}")
-async def create_conversation(
+@router.post("/chat-session/{chat_session_id}", response_model=ConversationResponse)
+async def create_conversation_by_chat_session(
     chat_session_id:str,
     conversation_data:ConversationRequest,
     user_id:str = Depends(verify_token),
@@ -36,9 +40,9 @@ async def create_conversation(
         content=conversation_data.content
     )
     convo_id = await conversation_repo.create(new_convo)
-    return {"message": f"{conversation_data.role.upper()} conversation created", "convo_id": convo_id}
+    return ConversationResponse(convo_id=convo_id, role=conversation_data.role)
 
-@router.get("/{convo_id}")
+@router.get("/{convo_id}", response_model=Conversation)
 async def get_conversation(
     convo_id:str,
     user_id:str = Depends(verify_token),
@@ -47,7 +51,7 @@ async def get_conversation(
     convo = await conversation_repo.get_by_id(convo_id)
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")
-    return {"conversation": convo}
+    return convo
 
 @router.put("/{convo_id}")
 async def update_conversation(
@@ -75,10 +79,3 @@ async def delete_conversation(
         raise HTTPException(status_code=404, detail="Conversation not found")
     await conversation_repo.delete(convo_id)
     return {"message": "Conversation deleted"}
-
-# save assistant conversation, but we must add it first then works with two below
-
-
-# save reference by convo_id
-
-# save agent execution by convo_id

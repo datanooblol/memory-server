@@ -116,7 +116,9 @@ FIELD_METADATA = {
     "data_type": "TEXT NOT NULL",
     "input_type": "TEXT NOT NULL",
     "description": "TEXT NOT NULL",
-    "sample_values": "TEXT"  # JSON string for optional list
+    "sample_values": "TEXT",  # JSON string for optional list
+    "created_at": "TEXT NOT NULL",
+    "updated_at": "TEXT NOT NULL"
 }
 
 # Table name mapping, but maybe no need

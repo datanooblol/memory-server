@@ -18,19 +18,22 @@ class TaskRequest(BaseModel):
     output_tokens: Optional[int] = Field(default=None, description="Number of output tokens generated")
     cost: Optional[float] = Field(default=None, description="Cost of this task execution in USD")
 
-@router.post("/agent-execution/{agent_execution_id}")
+class TaskResponse(BaseModel):
+    task_id: str
+
+@router.post("/execution/{execution_id}", response_model=TaskResponse)
 async def create_task(
-    agent_execution_id:str,
+    execution_id:str,
     task_data:TaskRequest,
     user_id: str = Depends(verify_token),
     agent_execution_repo=Depends(get_agent_execution_repo),
     task_repo=Depends(get_task_repo)
 ):
-    if not agent_execution_repo.get_by_id(agent_execution_id):
+    if not agent_execution_repo.get_by_id(execution_id):
         raise HTTPException(status_code=404, detail="Agent execution not found")
-    tasks = await task_repo.find_by(dict(execution_id=agent_execution_id))
+    tasks = await task_repo.find_by(dict(execution_id=execution_id))
     new_task = Task(
-        execution_id=agent_execution_id,
+        execution_id=execution_id,
         task_name=task_data.task_name,
         status=task_data.status,
         sequence_order=len(tasks)+1,
@@ -43,10 +46,10 @@ async def create_task(
         cost=task_data.cost
     )
     task_id = await task_repo.create(new_task)
-    return {"message": "Task created", "task_id": task_id}
+    return TaskResponse(task_id=task_id)
 
 # Get specific task
-@router.get("/{task_id}")
+@router.get("/{task_id}", response_model=Task)
 async def get_task(
     task_id: str,
     user_id: str = Depends(verify_token),
@@ -55,17 +58,17 @@ async def get_task(
     task = await task_repo.get_by_id(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    return {"task": task}
+    return task
 
 # List tasks for execution (ordered by sequence)
-@router.get("/agent-execution/{agent_execution_id}")
+@router.get("/execution/{execution_id}", response_model=list[Task])
 async def get_tasks_by_execution(
-    agent_execution_id: str,
+    execution_id: str,
     user_id: str = Depends(verify_token),
     task_repo = Depends(get_task_repo)
 ):
-    tasks = await task_repo.find_by(dict(execution_id= agent_execution_id), order_by="sequence_order")
-    return {"tasks": tasks}
+    tasks = await task_repo.find_by(dict(execution_id=execution_id), order_by="sequence_order")
+    return tasks
 
 # Delete task (optional)
 @router.delete("/{task_id}")

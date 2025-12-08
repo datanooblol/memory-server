@@ -5,16 +5,16 @@ from typing import List, Dict, Any, Optional
 from .base import BaseTimestampModel
 
 class InputType(str, Enum):
-    id = "id"
-    input = "input"
-    reject = "reject"
+    ID = "id"
+    INPUT = "input"
+    REJECT = "reject"
 
-class FieldMetadata(BaseModel):
+class FieldMetadata(BaseTimestampModel):
     field_id: str = Field(default_factory=lambda: str(uuid4()), description="Primary key - unique field identifier")
     source_id: str = Field(description="Foreign key - references Source.source_id")
     field_name: str = Field(description="Name of the field/column")
     data_type: str = Field(description="Data type of the field (extracted from CSV)")
-    input_type: InputType = Field(description="How this field should be treated (id, input, reject)")
+    input_type: InputType = Field(default=InputType.INPUT,description="How this field should be treated (id, input, reject)")
     description: str = Field(default="", description="Description of the field")
     sample_values: Optional[List[str]] = Field(default=None, description="Sample values for better context understanding")
     
@@ -36,7 +36,7 @@ class Metadata(BaseTimestampModel):
     metadata_id: str = Field(default_factory=lambda: str(uuid4()), description="Primary key - unique metadata identifier")
     source_id: str = Field(description="Foreign key - references Source.source_id")
     table_name: str = Field(description="Table name (derived from filename)")
-    description: str = Field(description="User-provided description of the dataset")
+    description: str = Field(default="", description="User-provided description of the dataset")
     
     def get_embedding_text(self) -> str:
         """Generate text for vector embedding"""

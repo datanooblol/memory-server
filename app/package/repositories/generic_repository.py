@@ -2,6 +2,7 @@ from typing import TypeVar, Generic, List, Optional, Dict, Any, Type
 from pydantic import BaseModel
 from datetime import datetime
 import json
+from package.data_models.base import bangkok_now
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -60,6 +61,13 @@ class GenericRepository(Generic[T]):
         await self.storage.insert(self.table_name, serialized_data)
         return getattr(model, self.id_field)
     
+    async def batch_create(self, models: List[T]) -> List[str]:
+        ids = []
+        for model in models:
+            await self.create(model)
+            ids.append(getattr(model, self.id_field))
+        return ids
+
     async def get_by_id(self, id: str) -> Optional[T]:
         results = await self.storage.query(
             f'SELECT * FROM "{self.table_name}" WHERE "{self.id_field}" = ?',
@@ -95,10 +103,25 @@ class GenericRepository(Generic[T]):
         serialized_data.pop(self.id_field, None)
         serialized_data.pop('created_at', None)
         
-        # Always update updated_at to current time, use updated_at from data models instead
-        # serialized_data['updated_at'] = datetime.now().isoformat()
-        
         await self.storage.update(self.table_name, serialized_data, {self.id_field: id})
+
+    async def batch_update(self, updates: List[T]) -> int:
+        """Update multiple records in single query"""
+        count = 0
+        
+        if not updates:
+            return count
+
+        for model in updates:
+            try:
+                model.updated_at = bangkok_now()
+                id_field = getattr(model, self.id_field)
+                await self.update(id_field, model)
+                count += 1
+            except Exception:
+                continue
+        return count
+        
 
     async def patch(self, id: str, partial_data: Dict[str, Any]) -> None:
         # Get existing record
@@ -124,7 +147,32 @@ class GenericRepository(Generic[T]):
             f'DELETE FROM "{self.table_name}" WHERE "{self.id_field}" = ?',
             {self.id_field: id}
         )
-    
+
+    async def delete_by(self, filters: Dict[str, Any]) -> int:
+        """Delete records matching criteria and return count of deleted records"""
+        where_parts = []
+        params = {}
+        
+        for key, value in filters.items():
+            where_parts.append(f'"{key}" = ?')
+            params[key] = value
+        
+        where_clause = " AND ".join(where_parts) if where_parts else "1=1"
+        
+        # Get count first (optional)
+        count_results = await self.storage.query(
+            f'SELECT COUNT(*) as count FROM "{self.table_name}" WHERE {where_clause}',
+            params
+        )
+        count = count_results[0]['count'] if count_results else 0
+        
+        # Delete records
+        await self.storage.query(
+            f'DELETE FROM "{self.table_name}" WHERE {where_clause}',
+            params
+        )
+        return count
+
     async def get_last_n(self, n: int, order_by: str = "created_at") -> List[T]:
         """Get last n records ordered by timestamp (newest first)"""
         results = await self.storage.query(
