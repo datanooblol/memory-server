@@ -9,6 +9,9 @@ from package.routers.reference import router as reference_router
 from package.routers.agent_execution import router as agent_execution_router
 from package.routers.task import router as task_router
 from package.routers.metadata import router as metadata_router
+from package.utils import init_project
+
+init_project()
 
 app = FastAPI(title="Memory Service")
 
@@ -20,6 +23,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 for r in [
     user_router,
