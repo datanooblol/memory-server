@@ -15,3 +15,9 @@ services:
       uv sync --directory /app && 
       uv run --directory /app main.py
       "    
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    external: true      

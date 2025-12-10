@@ -35,8 +35,10 @@ async def get_or_create_metadata(source_id, source_repo, metadata_repo, field_me
         await field_metadata_repo.batch_create(new_field_metadata)
         existing_metadata = new_metadata
         existing_field_metadata = new_field_metadata
+    else:
+        # Extract first item from lists when they exist
+        existing_metadata = existing_metadata[0]
     return MetadataRequest(metadata=existing_metadata, fields=existing_field_metadata)
-    # return metadata
 
 # GET /metadata/source/{source_id} - Smart get with auto-extraction
 @router.get("/source/{source_id}", response_model=MetadataRequest)
