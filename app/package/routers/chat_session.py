@@ -2,12 +2,12 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from package.auth.jwt_auth import verify_token
 from package.data_models import ChatSession
-from package.routers.dependencies import get_project_repo, get_chat_session_repo
+from package.routers.dependencies import get_project_repo, get_chat_session_repo, get_conversation_repo
 
 router = APIRouter(prefix="/chat-session", tags=["chat-session"])
 
 class ChatSessionRequest(BaseModel):
-    chat_session_id:str
+    # chat_session_id:str
     session_name:str
 
 class ChatSessionResponse(BaseModel):
@@ -66,4 +66,14 @@ async def update_chat_session_name(
         raise HTTPException(status_code=404, detail="Chat session not found")
     await chat_session_repo.patch(chat_session_id, dict(session_name=session_name))
     return {"message": "session_name updated successfully"}
+
+@router.delete("/{chat_session_id}/conversations")
+async def clear_chat_session_conversations(
+    chat_session_id: str,
+    user_id: str = Depends(verify_token),
+    conversation_repo = Depends(get_conversation_repo)
+):
+    await conversation_repo.delete_by({"chat_session_id": chat_session_id})
+    return {"message": "All conversations cleared"}
+
     

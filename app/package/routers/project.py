@@ -13,7 +13,7 @@ class ProjectRequest(BaseModel):
 class ProjectResponse(BaseModel):
     project_id:str
 
-@router.post("/", response_model=ProjectResponse)
+@router.post("", response_model=ProjectResponse)
 async def create_project(
     project_data: ProjectRequest,
     user_id: str = Depends(verify_token),
@@ -28,7 +28,7 @@ async def create_project(
     project_id = await project_repo.create(new_project)
     return ProjectResponse(project_id=project_id)
 
-@router.get("/", response_model=list[Project])
+@router.get("", response_model=list[Project])
 async def get_all_projects(
     user_id: str = Depends(verify_token),
     project_repo = Depends(get_project_repo)

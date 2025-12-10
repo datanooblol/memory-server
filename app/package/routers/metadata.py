@@ -53,7 +53,7 @@ async def get_metadata(
     return records
 
 # PUT /metadata/{metadata_id} - Update existing metadata
-@router.put("/")
+@router.put("")
 async def update_metadata(
     metadata_data: MetadataRequest,
     user_id: str = Depends(verify_token),

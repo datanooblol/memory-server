@@ -1,14 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from package.auth.jwt_auth import verify_token
-from package.data_models import ChatSession, Conversation, Role
+from package.data_models import ChatSession, Conversation, Role, ReferenceData
 from package.routers.dependencies import get_chat_session_repo, get_conversation_repo
+from typing import List, Optional
 
 router = APIRouter(prefix="/conversation", tags=["conversation"])
 
 class ConversationRequest(BaseModel):
     content:str
     role:Role
+    references:Optional[List[ReferenceData]] = None
 
 class ConversationResponse(BaseModel):
     convo_id:str
@@ -31,13 +33,15 @@ async def create_conversation_by_chat_session(
     chat_session_repo = Depends(get_chat_session_repo),
     conversation_repo = Depends(get_conversation_repo)
 ): 
+    """This will use to both user and assistant conversation"""
     chat_session = await chat_session_repo.get_by_id(chat_session_id)
     if not chat_session:
         raise HTTPException(status_code=404, detail="Chat session not found")
     new_convo = Conversation(
         chat_session_id=chat_session_id,
         role=conversation_data.role,
-        content=conversation_data.content
+        content=conversation_data.content,
+        references=conversation_data.references
     )
     convo_id = await conversation_repo.create(new_convo)
     return ConversationResponse(convo_id=convo_id, role=conversation_data.role)
