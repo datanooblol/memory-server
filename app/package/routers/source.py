@@ -5,7 +5,7 @@ from package.auth.jwt_auth import verify_token
 from package.data_models import Project, Source, SourceType
 from package.routers.dependencies import get_project_repo, get_source_repo
 from pathlib import Path
-
+from package.utils import query_csv_in_duckdb
 
 router = APIRouter(prefix="/source", tags=["source"])
 
@@ -22,6 +22,13 @@ class SourceRequest(BaseModel):
 
 class SourceResponse(BaseModel):
     source_id:str
+
+class QueryRequest(BaseModel):
+    files:list[str]
+    query:str
+
+class QueryResponse(BaseModel):
+    data:str
 
 # Create source under project
 @router.post("/project/{project_id}", response_model=SourceResponse)
@@ -179,48 +186,11 @@ async def upload_file(
     source_id = await source_repo.create(new_source)
     return SourceResponse(source_id=source_id)
 
-# @router.post("/project/{project_id}/register-path", response_model=SourceResponse)
-# async def register_local_file(
-#     project_id: str,
-#     path_data: SourcePathRequest,
-#     user_id: str = Depends(verify_token),
-#     project_repo = Depends(get_project_repo),
-#     source_repo = Depends(get_source_repo)
-# ):
-#     # Validate project ownership
-#     project = await project_repo.get_by_id(project_id)
-#     if not project:
-#         raise HTTPException(status_code=404, detail="Project not found")
-#     if project.user_id != user_id:
-#         raise HTTPException(status_code=403, detail="Not authorized")
-    
-#     # Validate file exists
-#     file_path = Path(path_data.file_path)
-#     if not file_path.exists():
-#         raise HTTPException(status_code=400, detail="File path does not exist")
-    
-#     # Get file info
-#     file_size = file_path.stat().st_size
-#     file_extension = file_path.suffix.lower().lstrip('.')
-    
-#     # Validate file type
-#     if file_extension not in ['csv']:
-#         raise HTTPException(status_code=400, detail="Unsupported file type")
-    
-#     # Create source
-#     new_source = Source(
-#         project_id=project_id,
-#         source_name=path_data.source_name,
-#         size=file_size,
-#         source_type=SourceType.CSV,
-#         source_path={
-#             "local_path": str(file_path.absolute()),
-#             "original_name": file_path.name
-#         }
-#     )
-    
-#     source_id = await source_repo.create(new_source)
-#     return SourceResponse(source_id=source_id)
-
-
+@router.post("/query", response_model=QueryResponse)
+async def query_sources(
+    query_data:QueryRequest,
+    user_id:str = Depends(verify_token)
+):
+    data = query_csv_in_duckdb(files=query_data.files, query=query_data.query)
+    return QueryResponse(data=data)
 
