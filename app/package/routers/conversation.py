@@ -83,3 +83,20 @@ async def delete_conversation(
         raise HTTPException(status_code=404, detail="Conversation not found")
     await conversation_repo.delete(convo_id)
     return {"message": "Conversation deleted"}
+
+class ReferenceRequest(BaseModel):
+    references:List[ReferenceData]
+
+@router.patch("/{convo_id}/references")
+async def update_conversation_references(
+    convo_id:str,
+    reference_data:ReferenceRequest,
+    user_id:str = Depends(verify_token),
+    conversation_repo = Depends(get_conversation_repo)
+):
+    convo = await conversation_repo.get_by_id(convo_id)
+    if not convo:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    print(reference_data.references)
+    await conversation_repo.patch(convo_id, dict(references=reference_data.references))
+    return {"message": "Conversation references updated"}
