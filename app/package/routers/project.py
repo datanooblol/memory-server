@@ -68,3 +68,20 @@ async def update_project(
     )
     await project_repo.update(project_id, updated_project)
     return {"message": "Project updated"}
+
+@router.delete("/{project_id}")
+async def delete_project(
+    project_id: str,
+    user_id: str = Depends(verify_token),
+    project_repo = Depends(get_project_repo)
+):
+    # Check if project exists and belongs to user
+    project = await project_repo.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if project.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    # Delete project
+    await project_repo.delete(project_id)
+    return {"message": "Project deleted"}
