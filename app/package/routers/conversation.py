@@ -25,6 +25,15 @@ async def get_conversations_by_chat_session(
     convos = await conversation_repo.find_by(dict(chat_session_id=chat_session_id))
     return convos
 
+@router.get("/chat-session/{chat_session_id}/latest", response_model=list[Conversation])
+async def get_conversations_by_chat_session(
+    chat_session_id:str,
+    user_id:str = Depends(verify_token),
+    conversation_repo = Depends(get_conversation_repo)
+):
+    convos = await conversation_repo.find_by(filters=dict(chat_session_id=chat_session_id), order_by="created_at", ascending=False, limit=1)
+    return convos
+
 @router.post("/chat-session/{chat_session_id}", response_model=ConversationResponse)
 async def create_conversation_by_chat_session(
     chat_session_id:str,
@@ -69,7 +78,7 @@ async def update_conversation(
         raise HTTPException(status_code=404, detail="Conversation not found")
     convo.content = conversation_data.content
     convo.role = conversation_data.role
-    await conversation_repo.update(convo)
+    await conversation_repo.update(convo_id, convo)
     return {"message": "Conversation updated"}
 
 @router.delete("/{convo_id}")
@@ -97,6 +106,5 @@ async def update_conversation_references(
     convo = await conversation_repo.get_by_id(convo_id)
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")
-    print(reference_data.references)
     await conversation_repo.patch(convo_id, dict(references=reference_data.references))
     return {"message": "Conversation references updated"}

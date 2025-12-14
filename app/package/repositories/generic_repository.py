@@ -78,7 +78,25 @@ class GenericRepository(Generic[T]):
             return self.model_class(**deserialized_data)
         return None
     
-    async def find_by(self, filters: Dict[str, Any], order_by: str = "created_at") -> List[T]:
+    # async def find_by(self, filters: Dict[str, Any], order_by: str = "created_at") -> List[T]:
+    #     where_parts = []
+    #     params = {}
+        
+    #     for key, value in filters.items():
+    #         where_parts.append(f'"{key}" = ?')
+    #         params[key] = value
+        
+    #     where_clause = " AND ".join(where_parts) if where_parts else "1=1"
+        
+    #     results = await self.storage.query(
+    #         f'SELECT * FROM "{self.table_name}" WHERE {where_clause} ORDER BY "{order_by}" ASC',
+    #         params
+    #     )
+        
+    #     return [self.model_class(**self._deserialize_from_storage(row)) for row in results]
+
+    async def find_by(self, filters: Dict[str, Any], order_by: str = "created_at", 
+                    ascending: bool = True, limit: Optional[int] = None) -> List[T]:
         where_parts = []
         params = {}
         
@@ -88,12 +106,19 @@ class GenericRepository(Generic[T]):
         
         where_clause = " AND ".join(where_parts) if where_parts else "1=1"
         
-        results = await self.storage.query(
-            f'SELECT * FROM "{self.table_name}" WHERE {where_clause} ORDER BY "{order_by}" ASC',
-            params
-        )
+        # Build ORDER BY clause
+        order_direction = "ASC" if ascending else "DESC"
+        order_clause = f'ORDER BY "{order_by}" {order_direction}'
+        
+        # Build LIMIT clause
+        limit_clause = f"LIMIT {limit}" if limit is not None else ""
+        
+        query = f'SELECT * FROM "{self.table_name}" WHERE {where_clause} {order_clause} {limit_clause}'
+        
+        results = await self.storage.query(query, params)
         
         return [self.model_class(**self._deserialize_from_storage(row)) for row in results]
+
     
     async def update(self, id: str, model: T) -> None:
         data = model.model_dump()
