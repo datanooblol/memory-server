@@ -29,6 +29,7 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     data:str
+    markdown:str
 
 # Create source under project
 @router.post("/project/{project_id}", response_model=SourceResponse)
@@ -191,6 +192,9 @@ async def query_sources(
     query_data:QueryRequest,
     user_id:str = Depends(verify_token)
 ):
+    import json
     data = query_csv_in_duckdb(files=query_data.files, query=query_data.query)
-    return QueryResponse(data=data)
+    json_str = json.dumps(data.to_dict(orient="tight"))
+    markdown = data.to_markdown()
+    return QueryResponse(data=json_str, markdown=markdown)
 
