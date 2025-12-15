@@ -6,6 +6,9 @@ from package.data_models import Project, Source, SourceType
 from package.routers.dependencies import get_project_repo, get_source_repo
 from pathlib import Path
 from package.utils import query_csv_in_duckdb
+import logging
+
+source_api = logging.getLogger("source_api")
 
 router = APIRouter(prefix="/source", tags=["source"])
 
@@ -194,7 +197,8 @@ async def query_sources(
 ):
     import json
     data = query_csv_in_duckdb(files=query_data.files, query=query_data.query)
-    json_str = json.dumps(data.to_dict(orient="tight"))
+    source_api.debug(f"DATA: {data.to_dict(orient='tight')}")
+    json_str = json.dumps(data.to_dict(orient="tight"), default=str)
     markdown = data.to_markdown()
     return QueryResponse(data=json_str, markdown=markdown)
 

@@ -1,3 +1,7 @@
+from package.utils import setup_logger
+import logging
+setup_logger(logging.DEBUG)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from package.routers.user import router as user_router
